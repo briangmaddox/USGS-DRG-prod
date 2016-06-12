@@ -1,0 +1,1 @@
+-L/opt/oracle7/lib -o test test.o -L../lib -lDRGSourceInfo -lsql /opt/oracle7/lib/osntab.o -lsqlnet -lora -lsqlnet -lora -lnlsrtl -lcv6 -lcore -lnlsrtl -lcv6 -lcore /opt/oracle7/lib/libgcc.a -lm -lld

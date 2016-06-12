@@ -1,0 +1,101 @@
+#!/bin/sh
+
+BIN=/usr/opt/bin
+export BIN
+
+if [ $# -lt 1 ]; then
+   echo "usage: $0 <source> [media]"
+   echo "where <source> is a path and media is one of:"
+   echo "   cdrom"
+   echo "   2cd"
+   echo "   8mm"
+   echo "   inplace"
+   echo "<source> is the tape device for 8mm"
+   exit 1
+fi
+
+source=$1
+if [ $# -eq 2 ]; then
+   media=$2
+else
+   media="cdrom"
+fi
+
+if [ ! -r "$source" ]; then
+   echo "$source does not exist."
+   exit 1
+fi
+
+if [ "$media" = "cdrom" ]; then
+   echo "Using cdrom"
+   cdrom in
+   f=`ls $source/*.tif`
+   if [ "$?" -ne 0 ]; then
+      echo "Hmm.  There don't seem to be any TIFFs in $source"
+      echo "Check your source.   Exiting..."
+      exit 1
+   fi
+   name=$HOME/cdrom/data
+   cd $name
+   cp $source/*.tif $source/*.tfw .
+   if [ "$?" -ne 0 ]; then
+      echo "Error copying from $source.  Bailing out..."
+      exit 1
+   fi
+   echo "Copy finished.  Please remove cdrom"
+   cdrom out
+elif [ "$media" = "cd2" ]; then
+   echo "Using two cdroms"
+   cdrom in
+   f=`ls $source/*.tif`
+   if [ "$?" -ne 0 ]; then
+      echo "Hmm.  There don't seem to be any TIFFs in $source"
+      echo "Check your source.   Exiting..."
+      exit 1
+   fi
+   name=$HOME/cdrom/data
+   cd $name
+   cp $source/*.tif $source/*.tfw .
+   if [ "$?" -ne 0 ]; then
+      echo "Error copying from $source.  Bailing out..."
+      exit 1
+   fi
+   cdrom out
+   echo -n "Insert 2nd CDROM and press enter"
+   read junk
+   cdrom in
+   if [ "$?" -ne 0 ]; then
+      echo "Error mounting $source.  Bailing out..."
+      exit 1
+   fi
+   cp $source/*.tif $source/*.tfw .
+   if [ "$?" -ne 0 ]; then
+      echo "Error copying from $source.  Bailing out..."
+      exit 1
+   fi
+   echo "Copy finished.  Please remove cdrom."
+   cdrom out
+elif [ "$media" = "8mm" ]; then
+   echo "Using 8mm tape"
+   name=$HOME/cdrom/data
+   cd $name
+   tar xvf $source
+   echo "Tar finished.  You may remove tape."
+elif [ "$media" = "inplace" ]; then
+   cd $source
+else
+   echo "Media type unknown"
+   exit 1
+fi
+
+echo "Making .met files"
+
+$BIN/makemet *.tif 2>makemet.err
+
+if [ ! -s "makemet.err" ]; then
+   rm -f makemet.err
+else
+   echo "There were errors using makemet.  Check makemet.err"
+fi
+
+$BIN/descreendrgs *.tif 

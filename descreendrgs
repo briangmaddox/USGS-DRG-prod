@@ -1,0 +1,28 @@
+#!/bin/sh
+
+while [ $# -gt 0 ]; do
+   name=$1
+   bname=`echo $name | sed "s/\..*//"`
+   $BIN/tiff2dgp ${bname}.tif ${bname}.dgp 2>${bname}.err
+   if [ "$?" -ne 0 ]; then
+      echo "Error converting $bname.tif to $bname.dgp"
+   else 
+      $BIN/descreen ${bname}.dgp 2>${bname}.err
+      if [ "$?" -ne 0 ]; then
+         echo "Error descreening $bname.dgp"
+      else 
+         rm -f ${bname}.tif
+         $BIN/dgp2gtif ${bname}.dgp ${bname}.tif 2>${bname}.err
+         if [ "$?" -ne 0 ]; then
+            echo "Error converting $bname.dgp to $bname.tif"
+         else
+            rm -f ${bname}.dgp
+            echo "${bname} successful."
+         fi
+      fi
+   fi
+   if [ ! -s ${bname}.err ]; then
+      rm -f ${bname}.err
+   fi
+   shift
+done
